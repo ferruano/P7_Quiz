@@ -3,12 +3,18 @@ var express = require('express');
 var path = require('path');
 var cookieParser = require('cookie-parser');
 var logger = require('morgan');
+var session = require('express-session');
+var SequelizeStore = require('connect-session-sequelize')(session.Store);
 var partials = require('express-partials');
+var flash = require('express-flash');
+var methodOverride = require('method-override');
 
 var routes = require('./routes/index');
 //var users = require('./routes/users');
 
 var app = express();
+
+
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
@@ -19,8 +25,22 @@ app.use(logger('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
+var sequeize = require("./models");
+var sessionStore = new SequelizeStore({
+    db:sequeize,
+    table: "session",
+    checkExpirationInterval: 15* 60 * 1000,
+    expiration: 4 * 60 * 60 * 1000
+});
+app.use(session({
+    secret: "Quiz 2018",
+    store:sessionStore,
+    resave: false,
+    saveUninitialized:true
+}));
+app.use(methodOverride('_method', {methods: ["POST", "GET"]}));
 app.use(express.static(path.join(__dirname, 'public')));
-
+app.use(flash());
 
 app.use('/', routes);
 //app.use('/users', users);
